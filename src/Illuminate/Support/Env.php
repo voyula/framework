@@ -55,7 +55,7 @@ class Env
             $builder = RepositoryBuilder::createWithDefaultAdapters();
 
             if (static::$putenv) {
-                $builder = $builder->withAdapter(PutenvAdapter::class);
+                $builder = $builder->addAdapter(PutenvAdapter::class);
             }
 
             static::$repository = $builder->immutable()->make();
