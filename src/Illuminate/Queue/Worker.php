@@ -129,13 +129,19 @@ class Worker
             // fire off this job for processing. Otherwise, we will need to sleep the
             // worker so no more jobs are processed until they should be processed.
             if ($job) {
-                $this->runJob($job, $connectionName, $options);
+                $pid = pcntl_fork();
+                if ($pid == -1) {
+                    die('Could not fork.');
+                } else if ($pid) {
+                    if ($this->supportsAsyncSignals()) {
+                        $this->resetTimeoutHandler();
+                    }
+                    pcntl_waitpid($pid, $status, WUNTRACED); //Protect against Zombie children
+                } else {
+                    $this->runJob($job, $connectionName, $options);
+                }
             } else {
                 $this->sleep($options->sleep);
-            }
-
-            if ($this->supportsAsyncSignals()) {
-                $this->resetTimeoutHandler();
             }
 
             // Finally, we will check to see if we have exceeded our memory limits or if
